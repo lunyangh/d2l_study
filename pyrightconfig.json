@@ -1,0 +1,8 @@
+{
+    "reportMissingImports": "none",
+    "reportMissingTypeStubs": "none",
+    "reportGeneralTypeIssues": "warning",
+    "pythonPlatform": "Linux",
+    "pythonVersion": "3.11",
+    "venvPath": ""
+}
