@@ -1,3 +1,8 @@
+# ruff: noqa: B006, B905
+"""
+customized d2l library, adapt to updated version of environment
+"""
+
 import collections
 import hashlib
 import inspect
@@ -11,6 +16,8 @@ import tarfile
 import time
 import zipfile
 from collections import defaultdict
+from collections.abc import Callable
+from typing import cast
 
 import numpy as np
 import pandas as pd
@@ -19,18 +26,19 @@ import torch
 import torchvision
 from IPython import display
 from matplotlib import pyplot as plt
+from matplotlib.axes import Axes
 from matplotlib_inline import backend_inline
 from PIL import Image
 from scipy.spatial import distance_matrix
 from torch import nn
 from torch.nn import functional as F
-from torch.utils import data
+from torch.utils import data as torch_data
 from torchvision import transforms
+from torchvision.transforms import functional
 
 DATA_HUB = dict()
 DATA_URL = "http://d2l-data.s3-accelerate.amazonaws.com/"
 
-nn_Module = nn.Module
 d2l = sys.modules[__name__]
 
 
@@ -103,7 +111,7 @@ def plot(
     if axes is None:
         axes = d2l.plt.gca()
     axes.cla()
-    for x, y, fmt in zip(X, Y, fmts):
+    for x, y, fmt in zip(X, Y, fmts, strict=False):
         axes.plot(x, y, fmt) if len(x) else axes.plot(y, fmt)
     set_axes(axes, xlabel, ylabel, xlim, ylim, xscale, yscale, legend)
 
@@ -126,7 +134,10 @@ class HyperParameters:
         """Save function arguments into class attributes.
 
         Defined in :numref:`sec_utils`"""
-        frame = inspect.currentframe().f_back
+        current_frame = inspect.currentframe()
+        assert current_frame is not None
+        frame = current_frame.f_back
+        assert frame is not None
         _, _, _, local_vars = inspect.getargvalues(frame)
         self.hparams = {
             k: v
@@ -137,10 +148,22 @@ class HyperParameters:
             setattr(self, k, v)
 
 
-class ProgressBoard(d2l.HyperParameters):
+class ProgressBoard(HyperParameters):
     """The board that plots data points in animation.
 
     Defined in :numref:`sec_oo-design`"""
+
+    display: bool
+    figsize: tuple[float, float]
+    ls: list[str]
+    colors: list[str]
+    axes: Axes | None
+    xlim: tuple[float, float] | None
+    ylim: tuple[float, float] | None
+    xlabel: str
+    ylabel: str
+    xscale: str
+    yscale: str
 
     def __init__(
         self,
@@ -155,7 +178,7 @@ class ProgressBoard(d2l.HyperParameters):
         fig=None,
         axes=None,
         figsize=(3.5, 2.5),
-        display=True,
+        display: bool = True,
     ):
         self.save_hyperparameters()
 
@@ -195,7 +218,7 @@ class ProgressBoard(d2l.HyperParameters):
         if self.ylim:
             axes.set_ylim(self.ylim)
         if not self.xlabel:
-            self.xlabel = self.x
+            self.xlabel = x  # not sure where self.x comes from.
         axes.set_xlabel(self.xlabel)
         axes.set_ylabel(self.ylabel)
         axes.set_xscale(self.xscale)
@@ -205,7 +228,7 @@ class ProgressBoard(d2l.HyperParameters):
         display.clear_output(wait=True)
 
 
-class Module(d2l.nn_Module, d2l.HyperParameters):
+class Module(nn.Module, HyperParameters):
     """The base class of models.
 
     Defined in :numref:`sec_oo-design`"""
@@ -240,13 +263,13 @@ class Module(d2l.nn_Module, d2l.HyperParameters):
         )
 
     def training_step(self, batch):
-        l = self.loss(self(*batch[:-1]), batch[-1])
-        self.plot("loss", l, train=True)
-        return l
+        loss = self.loss(self(*batch[:-1]), batch[-1])
+        self.plot("loss", loss, train=True)
+        return loss
 
     def validation_step(self, batch):
-        l = self.loss(self(*batch[:-1]), batch[-1])
-        self.plot("loss", l, train=False)
+        loss = self.loss(self(*batch[:-1]), batch[-1])
+        self.plot("loss", loss, train=False)
 
     def configure_optimizers(self):
         """Defined in :numref:`sec_classification`"""
@@ -259,10 +282,12 @@ class Module(d2l.nn_Module, d2l.HyperParameters):
             self.net.apply(init)
 
 
-class DataModule(d2l.HyperParameters):
+class DataModule(HyperParameters):
     """The base class of data.
 
     Defined in :numref:`subsec_oo-design-models`"""
+
+    batch_size: int
 
     def __init__(self, root="../data", num_workers=4):
         self.save_hyperparameters()
@@ -279,18 +304,23 @@ class DataModule(d2l.HyperParameters):
     def get_tensorloader(self, tensors, train, indices=slice(0, None)):
         """Defined in :numref:`sec_synthetic-regression-data`"""
         tensors = tuple(a[indices] for a in tensors)
-        dataset = torch.utils.data.TensorDataset(*tensors)
-        return torch.utils.data.DataLoader(dataset, self.batch_size, shuffle=train)
+        dataset = torch_data.TensorDataset(*tensors)
+        return torch_data.DataLoader(dataset, self.batch_size, shuffle=train)
 
 
-class Trainer(d2l.HyperParameters):
+class Trainer(HyperParameters):
     """The base class for training models with data.
 
-    Defined in :numref:`subsec_oo-design-models`"""
+    Defined in :numref:`subsec_oo-design-models`
+    """
+
+    max_epochs: int
+    gradient_clip_val: float
 
     def __init__(self, max_epochs, num_gpus=0, gradient_clip_val=0):
+        """Defined in :numref:`sec_use_gpu`"""
         self.save_hyperparameters()
-        assert num_gpus == 0, "No GPU support yet"
+        self.gpus = [d2l.gpu(i) for i in range(min(num_gpus, d2l.num_gpus()))]
 
     def prepare_data(self, data):
         self.train_dataloader = data.train_dataloader()
@@ -300,11 +330,6 @@ class Trainer(d2l.HyperParameters):
             len(self.val_dataloader) if self.val_dataloader is not None else 0
         )
 
-    def prepare_model(self, model):
-        model.trainer = self
-        model.board.xlim = [0, self.max_epochs]
-        self.model = model
-
     def fit(self, model, data):
         self.prepare_data(data)
         self.prepare_model(model)
@@ -312,15 +337,9 @@ class Trainer(d2l.HyperParameters):
         self.epoch = 0
         self.train_batch_idx = 0
         self.val_batch_idx = 0
-        for self.epoch in range(self.max_epochs):
+        for epoch in range(self.max_epochs):
+            self.epoch = epoch
             self.fit_epoch()
-
-    def fit_epoch(self):
-        raise NotImplementedError
-
-    def prepare_batch(self, batch):
-        """Defined in :numref:`sec_linear_scratch`"""
-        return batch
 
     def fit_epoch(self):
         """Defined in :numref:`sec_linear_scratch`"""
@@ -342,11 +361,6 @@ class Trainer(d2l.HyperParameters):
                 self.model.validation_step(self.prepare_batch(batch))
             self.val_batch_idx += 1
 
-    def __init__(self, max_epochs, num_gpus=0, gradient_clip_val=0):
-        """Defined in :numref:`sec_use_gpu`"""
-        self.save_hyperparameters()
-        self.gpus = [d2l.gpu(i) for i in range(min(num_gpus, d2l.num_gpus()))]
-
     def prepare_batch(self, batch):
         """Defined in :numref:`sec_use_gpu`"""
         if self.gpus:
@@ -364,7 +378,7 @@ class Trainer(d2l.HyperParameters):
     def clip_gradients(self, grad_clip_val, model):
         """Defined in :numref:`sec_rnn-scratch`"""
         params = [p for p in model.parameters() if p.requires_grad]
-        norm = torch.sqrt(sum(torch.sum(p.grad**2) for p in params))
+        norm = torch.sqrt(sum(torch.sum(p.grad**2) for p in params))  # type: ignore
         if norm > grad_clip_val:
             for param in params:
                 param.grad[:] *= grad_clip_val / norm
@@ -499,7 +513,7 @@ class FashionMNIST(d2l.DataModule):
     def get_dataloader(self, train):
         """Defined in :numref:`sec_fashion_mnist`"""
         data = self.train if train else self.val
-        return torch.utils.data.DataLoader(
+        return torch_data.DataLoader(
             data, self.batch_size, shuffle=train, num_workers=self.num_workers
         )
 
@@ -509,13 +523,6 @@ class FashionMNIST(d2l.DataModule):
         if not labels:
             labels = self.text_labels(y)
         d2l.show_images(X.squeeze(1), nrows, ncols, titles=labels)
-
-
-def show_images(imgs, num_rows, num_cols, titles=None, scale=1.5):
-    """Plot a list of images.
-
-    Defined in :numref:`sec_fashion_mnist`"""
-    raise NotImplementedError
 
 
 class Classifier(d2l.Module):
@@ -618,7 +625,7 @@ def init_cnn(module):
     """Initialize weights for CNNs.
 
     Defined in :numref:`sec_lenet`"""
-    if type(module) == nn.Linear or type(module) == nn.Conv2d:
+    if isinstance(module, (nn.Linear, nn.Conv2d)):
         nn.init.xavier_uniform_(module.weight)
 
 
@@ -708,10 +715,26 @@ class ResNeXtBlock(nn.Module):
         return F.relu(Y + X)
 
 
-class TimeMachine(d2l.DataModule):
+class TimeMachine(DataModule):
     """The Time Machine dataset.
 
     Defined in :numref:`sec_text-sequence`"""
+
+    root: str
+    num_train: int
+    num_val: int
+
+    def __init__(
+        self, batch_size, num_steps, num_train: int = 10000, num_val: int = 5000
+    ):
+        """Defined in :numref:`sec_language-model`"""
+        super().__init__()
+        self.save_hyperparameters()
+        corpus, self.vocab = self.build(self._download())
+        array = d2l.tensor(
+            [corpus[i : i + num_steps + 1] for i in range(len(corpus) - num_steps)]
+        )
+        self.X, self.Y = array[:, :-1], array[:, 1:]
 
     def _download(self):
         fname = d2l.download(
@@ -737,16 +760,6 @@ class TimeMachine(d2l.DataModule):
             vocab = Vocab(tokens)
         corpus = [vocab[token] for token in tokens]
         return corpus, vocab
-
-    def __init__(self, batch_size, num_steps, num_train=10000, num_val=5000):
-        """Defined in :numref:`sec_language-model`"""
-        super(d2l.TimeMachine, self).__init__()
-        self.save_hyperparameters()
-        corpus, self.vocab = self.build(self._download())
-        array = d2l.tensor(
-            [corpus[i : i + num_steps + 1] for i in range(len(corpus) - num_steps)]
-        )
-        self.X, self.Y = array[:, :-1], array[:, 1:]
 
     def get_dataloader(self, train):
         """Defined in :numref:`subsec_partitioning-seqs`"""
@@ -1068,7 +1081,7 @@ class Decoder(nn.Module):
         raise NotImplementedError
 
 
-class EncoderDecoder(d2l.Classifier):
+class EncoderDecoder(Classifier):
     """The base class for the encoder--decoder architecture.
 
     Defined in :numref:`sec_encoder-decoder`"""
@@ -1109,12 +1122,14 @@ def init_seq2seq(module):
     """Initialize weights for sequence-to-sequence learning.
 
     Defined in :numref:`sec_seq2seq`"""
-    if type(module) == nn.Linear:
+    if isinstance(module, nn.Linear):
         nn.init.xavier_uniform_(module.weight)
-    if type(module) == nn.GRU:
+    if isinstance(module, nn.GRU):
         for param in module._flat_weights_names:
             if "weight" in param:
-                nn.init.xavier_uniform_(module._parameters[param])
+                _para = module._parameters[param]
+                assert _para is not None
+                nn.init.xavier_uniform_(_para)
 
 
 class Seq2SeqEncoder(d2l.Encoder):
@@ -1186,6 +1201,7 @@ def show_heatmaps(
     fig, axes = d2l.plt.subplots(
         num_rows, num_cols, figsize=figsize, sharex=True, sharey=True, squeeze=False
     )
+    pcm = None
     for i, (row_axes, row_matrices) in enumerate(zip(axes, matrices)):
         for j, (ax, matrix) in enumerate(zip(row_axes, row_matrices)):
             pcm = ax.imshow(d2l.numpy(matrix), cmap=cmap)
@@ -1195,6 +1211,7 @@ def show_heatmaps(
                 ax.set_ylabel(ylabel)
             if titles:
                 ax.set_title(titles[j])
+    assert pcm is not None
     fig.colorbar(pcm, ax=axes, shrink=0.6)
 
 
@@ -1223,7 +1240,7 @@ def masked_softmax(X, valid_lens):
             valid_lens = valid_lens.reshape(-1)
         # On the last axis, replace masked elements with a very large negative
         # value, whose exponentiation outputs 0
-        X = _sequence_mask(X.reshape(-1, shape[-1]), valid_lens, value=-1e6)
+        X = _sequence_mask(X.reshape(-1, shape[-1]), valid_lens, value=int(-1e6))
         return nn.functional.softmax(X.reshape(shape), dim=-1)
 
 
@@ -1482,7 +1499,7 @@ def train_2d(trainer, steps=20, f_grad=None):
         else:
             x1, x2, s1, s2 = trainer(x1, x2, s1, s2)
         results.append((x1, x2))
-    print(f"epoch {i + 1}, x1: {float(x1):f}, x2: {float(x2):f}")
+        print(f"epoch {i + 1}, x1: {float(x1):f}, x2: {float(x2):f}")
     return results
 
 
@@ -1684,11 +1701,19 @@ def train_batch_ch13(net, X, y, loss, trainer, devices):
 
 
 def train_ch13(
-    net, train_iter, test_iter, loss, trainer, num_epochs, devices=d2l.try_all_gpus()
+    net,
+    train_iter,
+    test_iter,
+    loss,
+    trainer,
+    num_epochs,
+    devices=None,
 ):
     """Train a model with multiple GPUs (defined in Chapter 13).
 
     Defined in :numref:`sec_image_augmentation`"""
+    devices = devices or try_all_gpus()
+
     timer, num_batches = d2l.Timer(), len(train_iter)
     animator = d2l.Animator(
         xlabel="epoch",
@@ -1697,14 +1722,17 @@ def train_ch13(
         legend=["train loss", "train acc", "test acc"],
     )
     net = nn.DataParallel(net, device_ids=devices).to(devices[0])
+    assert len(num_epochs) > 0
+    metric = None
+    test_acc = None
     for epoch in range(num_epochs):
         # Sum of training loss, sum of training accuracy, no. of examples,
         # no. of predictions
-        metric = d2l.Accumulator(4)
+        metric = Accumulator(4)
         for i, (features, labels) in enumerate(train_iter):
             timer.start()
-            l, acc = train_batch_ch13(net, features, labels, loss, trainer, devices)
-            metric.add(l, acc, labels.shape[0], labels.numel())
+            loss, acc = train_batch_ch13(net, features, labels, loss, trainer, devices)
+            metric.add(loss, acc, labels.shape[0], labels.numel())
             timer.stop()
             if (i + 1) % (num_batches // 5) == 0 or i == num_batches - 1:
                 animator.add(
@@ -1713,6 +1741,7 @@ def train_ch13(
                 )
         test_acc = d2l.evaluate_accuracy_gpu(net, test_iter)
         animator.add(epoch + 1, (None, None, test_acc))
+    assert metric is not None
     print(
         f"loss {metric[0] / metric[2]:.3f}, train acc "
         f"{metric[1] / metric[3]:.3f}, test acc {test_acc:.3f}"
@@ -1720,8 +1749,8 @@ def train_ch13(
     print(f"{metric[2] * num_epochs / timer.sum():.1f} examples/sec on {str(devices)}")
 
 
-d2l.DATA_HUB["hotdog"] = (
-    d2l.DATA_URL + "hotdog.zip",
+DATA_HUB["hotdog"] = (
+    DATA_URL + "hotdog.zip",
     "fba480ffa8aa7e0febbb511d181409f899b9baa5",
 )
 
@@ -1735,7 +1764,7 @@ def box_corner_to_center(boxes):
     cy = (y1 + y2) / 2
     w = x2 - x1
     h = y2 - y1
-    boxes = d2l.stack((cx, cy, w, h), axis=-1)
+    boxes = stack((cx, cy, w, h), axis=-1)
     return boxes
 
 
@@ -1748,7 +1777,7 @@ def box_center_to_corner(boxes):
     y1 = cy - 0.5 * h
     x2 = cx + 0.5 * w
     y2 = cy + 0.5 * h
-    boxes = d2l.stack((x1, y1, x2, y2), axis=-1)
+    boxes = stack((x1, y1, x2, y2), axis=-1)
     return boxes
 
 
@@ -2049,7 +2078,7 @@ def read_data_bananas(is_train=True):
     return images, torch.tensor(targets).unsqueeze(1) / 256
 
 
-class BananasDataset(torch.utils.data.Dataset):
+class BananasDataset(torch_data.Dataset):
     """A customized dataset to load the banana detection dataset.
 
     Defined in :numref:`sec_object-detection-dataset`"""
@@ -2073,10 +2102,10 @@ def load_data_bananas(batch_size):
     """Load the banana detection dataset.
 
     Defined in :numref:`sec_object-detection-dataset`"""
-    train_iter = torch.utils.data.DataLoader(
+    train_iter = torch_data.DataLoader(
         BananasDataset(is_train=True), batch_size, shuffle=True
     )
-    val_iter = torch.utils.data.DataLoader(BananasDataset(is_train=False), batch_size)
+    val_iter = torch_data.DataLoader(BananasDataset(is_train=False), batch_size)
     return train_iter, val_iter
 
 
@@ -2184,12 +2213,12 @@ def voc_rand_crop(feature, label, height, width):
 
     Defined in :numref:`sec_semantic_segmentation`"""
     rect = torchvision.transforms.RandomCrop.get_params(feature, (height, width))
-    feature = torchvision.transforms.functional.crop(feature, *rect)
-    label = torchvision.transforms.functional.crop(label, *rect)
+    feature = functional.crop(feature, *rect)
+    label = functional.crop(label, *rect)
     return feature, label
 
 
-class VOCSegDataset(torch.utils.data.Dataset):
+class VOCSegDataset(torch_data.Dataset):
     """A customized dataset to load the VOC dataset.
 
     Defined in :numref:`sec_semantic_segmentation`"""
@@ -2233,14 +2262,14 @@ def load_data_voc(batch_size, crop_size):
     Defined in :numref:`sec_semantic_segmentation`"""
     voc_dir = d2l.download_extract("voc2012", os.path.join("VOCdevkit", "VOC2012"))
     num_workers = d2l.get_dataloader_workers()
-    train_iter = torch.utils.data.DataLoader(
+    train_iter = torch_data.DataLoader(
         VOCSegDataset(True, crop_size, voc_dir),
         batch_size,
         shuffle=True,
         drop_last=True,
         num_workers=num_workers,
     )
-    test_iter = torch.utils.data.DataLoader(
+    test_iter = torch_data.DataLoader(
         VOCSegDataset(False, crop_size, voc_dir),
         batch_size,
         drop_last=True,
@@ -2446,7 +2475,7 @@ def load_data_ptb(batch_size, max_window_size, num_noise_words):
     all_centers, all_contexts = get_centers_and_contexts(corpus, max_window_size)
     all_negatives = get_negatives(all_contexts, vocab, counter, num_noise_words)
 
-    class PTBDataset(torch.utils.data.Dataset):
+    class PTBDataset(torch_data.Dataset):
         def __init__(self, centers, contexts, negatives):
             assert len(centers) == len(contexts) == len(negatives)
             self.centers = centers
@@ -2461,7 +2490,7 @@ def load_data_ptb(batch_size, max_window_size, num_noise_words):
 
     dataset = PTBDataset(all_centers, all_contexts, all_negatives)
 
-    data_iter = torch.utils.data.DataLoader(
+    data_iter = torch_data.DataLoader(
         dataset, batch_size, shuffle=True, collate_fn=batchify, num_workers=num_workers
     )
     return data_iter, vocab
@@ -2811,7 +2840,7 @@ def _pad_bert_inputs(examples, max_len, vocab):
     )
 
 
-class _WikiTextDataset(torch.utils.data.Dataset):
+class _WikiTextDataset(torch_data.Dataset):
     """Defined in :numref:`subsec_prepare_mlm_data`"""
 
     def __init__(self, paragraphs, max_len):
@@ -2868,7 +2897,7 @@ def load_data_wiki(batch_size, max_len):
     data_dir = d2l.download_extract("wikitext-2", "wikitext-2")
     paragraphs = _read_wiki(data_dir)
     train_set = _WikiTextDataset(paragraphs, max_len)
-    train_iter = torch.utils.data.DataLoader(
+    train_iter = torch_data.DataLoader(
         train_set, batch_size, shuffle=True, num_workers=num_workers
     )
     return train_iter, train_set.vocab
@@ -2994,7 +3023,7 @@ def read_snli(data_dir, is_train):
     return premises, hypotheses, labels
 
 
-class SNLIDataset(torch.utils.data.Dataset):
+class SNLIDataset(torch_data.Dataset):
     """A customized dataset to load the SNLI dataset.
 
     Defined in :numref:`sec_natural-language-inference-and-dataset`"""
@@ -3041,10 +3070,10 @@ def load_data_snli(batch_size, num_steps=50):
     test_data = read_snli(data_dir, False)
     train_set = SNLIDataset(train_data, num_steps)
     test_set = SNLIDataset(test_data, num_steps, train_set.vocab)
-    train_iter = torch.utils.data.DataLoader(
+    train_iter = torch_data.DataLoader(
         train_set, batch_size, shuffle=True, num_workers=num_workers
     )
-    test_iter = torch.utils.data.DataLoader(
+    test_iter = torch_data.DataLoader(
         test_set, batch_size, shuffle=False, num_workers=num_workers
     )
     return train_iter, test_iter, train_set.vocab
@@ -3084,10 +3113,10 @@ class HPOTrainer(d2l.Trainer):
         return 1 - accuracy / val_batch_idx
 
 
-class HPOSearcher(d2l.HyperParameters):
+class HPOSearcher(HyperParameters):
     """Defined in :numref:`sec_api_hpo`"""
 
-    def sample_configuration() -> dict:
+    def sample_configuration(self) -> dict:
         raise NotImplementedError
 
     def update(self, config: dict, error: float, additional_info=None):
@@ -3096,6 +3125,8 @@ class HPOSearcher(d2l.HyperParameters):
 
 class RandomSearcher(HPOSearcher):
     """Defined in :numref:`sec_api_hpo`"""
+
+    config_space: dict
 
     def __init__(self, config_space: dict, initial_config=None):
         self.save_hyperparameters()
@@ -3109,7 +3140,7 @@ class RandomSearcher(HPOSearcher):
         return result
 
 
-class HPOScheduler(d2l.HyperParameters):
+class HPOScheduler(HyperParameters):
     """Defined in :numref:`sec_api_hpo`"""
 
     def suggest(self) -> dict:
@@ -3121,6 +3152,8 @@ class HPOScheduler(d2l.HyperParameters):
 
 class BasicScheduler(HPOScheduler):
     """Defined in :numref:`sec_api_hpo`"""
+
+    searcher: HPOSearcher
 
     def __init__(self, searcher: HPOSearcher):
         self.save_hyperparameters()
@@ -3135,7 +3168,9 @@ class BasicScheduler(HPOScheduler):
 class HPOTuner(d2l.HyperParameters):
     """Defined in :numref:`sec_api_hpo`"""
 
-    def __init__(self, scheduler: HPOScheduler, objective: callable):
+    objective: Callable
+
+    def __init__(self, scheduler: HPOScheduler, objective: Callable):
         self.save_hyperparameters()
         # Bookeeping results for plotting
         self.incumbent = None
@@ -3162,7 +3197,7 @@ class HPOTuner(d2l.HyperParameters):
         self.records.append({"config": config, "error": error, "runtime": runtime})
         # Check if the last hyperparameter configuration performs better
         # than the incumbent
-        if self.incumbent is None or self.incumbent_error > error:
+        if self.incumbent is None or self.incumbent_error > error:  # type:ignore
             self.incumbent = config
             self.incumbent_error = error
         # Add current best observed performance to the optimization trajectory
@@ -3511,8 +3546,8 @@ def load_array(data_arrays, batch_size, is_train=True):
     """Construct a PyTorch data iterator.
 
     Defined in :numref:`sec_utils`"""
-    dataset = torch.utils.data.TensorDataset(*data_arrays)
-    return torch.utils.data.DataLoader(dataset, batch_size, shuffle=is_train)
+    dataset = torch_data.TensorDataset(*data_arrays)
+    return torch_data.DataLoader(dataset, batch_size, shuffle=is_train)
 
 
 def synthetic_data(w, b, num_examples):
@@ -3557,10 +3592,10 @@ def load_data_fashion_mnist(batch_size, resize=None):
         root="../data", train=False, transform=trans, download=True
     )
     return (
-        torch.utils.data.DataLoader(
+        torch_data.DataLoader(
             mnist_train, batch_size, shuffle=True, num_workers=get_dataloader_workers()
         ),
-        torch.utils.data.DataLoader(
+        torch_data.DataLoader(
             mnist_test, batch_size, shuffle=False, num_workers=get_dataloader_workers()
         ),
     )
@@ -3609,6 +3644,10 @@ def train_ch6(net, train_iter, test_iter, num_epochs, lr, device):
         legend=["train loss", "train acc", "test acc"],
     )
     timer, num_batches = d2l.Timer(), len(train_iter)
+    train_l = np.nan
+    train_acc = np.nan
+    test_acc = np.nan
+    metric = None
     for epoch in range(num_epochs):
         # Sum of training loss, sum of training accuracy, no. of examples
         metric = d2l.Accumulator(3)
@@ -3630,6 +3669,7 @@ def train_ch6(net, train_iter, test_iter, num_epochs, lr, device):
                 animator.add(epoch + (i + 1) / num_batches, (train_l, train_acc, None))
         test_acc = evaluate_accuracy_gpu(net, test_iter)
         animator.add(epoch + 1, (None, None, test_acc))
+    assert metric is not None
     print(f"loss {train_l:.3f}, train acc {train_acc:.3f}, test acc {test_acc:.3f}")
     print(f"{metric[2] * num_epochs / timer.sum():.1f} examples/sec on {str(device)}")
 
@@ -4077,7 +4117,6 @@ def predict_seq2seq(
 
 
 # Alias defined in config.ini
-nn_Module = nn.Module
 
 ones_like = torch.ones_like
 ones = torch.ones
