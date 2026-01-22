@@ -1584,7 +1584,14 @@ def get_data_ch11(batch_size=10, n=1500):
     return data_iter, data.shape[1] - 1
 
 
-def train_ch11(trainer_fn, states, hyperparams, data_iter, feature_dim, num_epochs=2):
+def train_ch11(
+    trainer_fn,
+    states,
+    hyperparams,
+    data_iter,
+    feature_dim,
+    num_epochs=2,
+):
     """Defined in :numref:`sec_minibatches`"""
     # Initialization
     w = torch.normal(mean=0.0, std=0.01, size=(feature_dim, 1), requires_grad=True)
@@ -1608,11 +1615,17 @@ def train_ch11(trainer_fn, states, hyperparams, data_iter, feature_dim, num_epoc
                     (evaluate_loss(net, data_iter, loss),),
                 )
                 timer.start()
+    assert animator.Y is not None
     print(f"loss: {animator.Y[0][-1]:.3f}, {timer.sum() / num_epochs:.3f} sec/epoch")
     return timer.cumsum(), animator.Y[0]
 
 
-def train_concise_ch11(trainer_fn, hyperparams, data_iter, num_epochs=4):
+def train_concise_ch11(
+    trainer_fn,
+    hyperparams,
+    data_iter,
+    num_epochs=4,
+):
     """Defined in :numref:`sec_minibatches`"""
     # Initialization
     net = nn.Sequential(nn.Linear(5, 1))
@@ -1646,6 +1659,7 @@ def train_concise_ch11(trainer_fn, hyperparams, data_iter, num_epochs=4):
                     (evaluate_loss(net, data_iter, loss) / 2,),
                 )
                 timer.start()
+    assert animator.Y is not None
     print(f"loss: {animator.Y[0][-1]:.3f}, {timer.sum() / num_epochs:.3f} sec/epoch")
 
 
@@ -3612,7 +3626,7 @@ def load_data_fashion_mnist(batch_size, resize=None):
     Defined in :numref:`sec_utils`"""
     trans = [transforms.ToTensor()]
     if resize:
-        trans.insert(0, transforms.Resize(resize))
+        trans.insert(0, transforms.Resize(resize))  # type:ignore
     trans = transforms.Compose(trans)
     mnist_train = torchvision.datasets.FashionMNIST(
         root="../data", train=True, transform=trans, download=True
@@ -3759,6 +3773,9 @@ def get_fashion_mnist_labels(labels):
 
 class Animator:
     """For plotting data in animation."""
+
+    X: None | list[list[float]]
+    Y: None | list[list[float]]
 
     def __init__(
         self,
@@ -4061,7 +4078,7 @@ def train_seq2seq(net, data_iter, lr, num_epochs, tgt_vocab, device):
         if isinstance(m, nn.GRU):
             for param in m._flat_weights_names:
                 if "weight" in param:
-                    nn.init.xavier_uniform_(m._parameters[param])
+                    nn.init.xavier_uniform_(m._parameters[param])  # type:ignore
 
     net.apply(xavier_init_weights)
     net.to(device)
