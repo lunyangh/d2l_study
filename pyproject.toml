@@ -2,6 +2,8 @@
 line-length = 88
 target-version = "py311"
 
+exclude = ['src/d2l_raw']
+
 [tool.ruff.lint]
 select = ["E", "W", "F", "I", "B", "UP"]
 ignore = ['F401']
