@@ -1,0 +1,19 @@
+{
+  "folders": [
+    {
+      "path": ".",
+    },
+    {
+      "path": "../official_repo/d2l-en",
+    },
+    {
+      "path": "../test_env",
+    },
+    {
+      "path": "../official_repo/jupyter_notebook/d2l-en/pytorch",
+    },
+  ],
+  "settings": {
+    "python.defaultInterpreterPath": "../test_env/.venv/bin/python3",
+  },
+}

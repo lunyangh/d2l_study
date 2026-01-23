@@ -13,6 +13,15 @@ fixable = ["ALL"]
 unfixable = []
 
 [tool.ruff.lint.per-file-ignores]
+# some flags disabled for interactive developing
+"*.ipynb" = [
+    "B018", # Useless expression (used for printing cell output)
+    "E402", # Import not at top of file
+    "E501", # Line too long
+    "F401", # Unused imports (optional, if you hate cleanup during dev)
+    "N803", # Argument name should be lowercase (allow 'X' in functions)
+    "N806", # Variable name should be lowercase (allow 'X' in cells)    
+]
 
 [tool.ruff.lint.isort]
 
