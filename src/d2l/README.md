@@ -1,0 +1,1 @@
+customized d2l package to be compatible with updated numpy and pytorch.

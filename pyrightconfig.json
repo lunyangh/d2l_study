@@ -1,10 +1,12 @@
 {
-    "reportMissingImports": "none",
-    "reportMissingTypeStubs": "none",
-    "reportGeneralTypeIssues": "warning",
-    "reportUnusedExpression": "none",
-    "reportUnusedVariable": "none",
-    "reportUnusedClass": "none",
-    "pythonPlatform": "Linux",
-    "pythonVersion": "3.11",
+  "reportMissingImports": "none",
+  "reportMissingTypeStubs": "none",
+  "reportGeneralTypeIssues": "warning",
+  "reportUnusedExpression": "none",
+  "reportUnusedVariable": "none",
+  "reportUnusedClass": "none",
+  "reportOptionalMemberAccess": "none",
+  "pythonPlatform": "Linux",
+  "pythonVersion": "3.11",
+  "ignore": ["*.ipynb"]
 }

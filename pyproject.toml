@@ -5,7 +5,7 @@ target-version = "py311"
 exclude = ['src/d2l_raw']
 
 [tool.ruff.lint]
-select = ["E", "W", "F", "I", "B", "UP"]
+select = ["E", "F", "I", "B", "UP"]
 ignore = ['F401']
 
 # 4. Allow fixing for all enabled rules (when `--fix` is used)
@@ -21,6 +21,8 @@ unfixable = []
     "F401", # Unused imports (optional, if you hate cleanup during dev)
     "N803", # Argument name should be lowercase (allow 'X' in functions)
     "N806", # Variable name should be lowercase (allow 'X' in cells)    
+    # "W291", # no traling whitespace
+    "W",
 ]
 
 [tool.ruff.lint.isort]
