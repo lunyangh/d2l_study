@@ -6,7 +6,7 @@ exclude = ['src/d2l_raw']
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP"]
-ignore = ['F401']
+ignore = ['F401', "B905"]
 
 # 4. Allow fixing for all enabled rules (when `--fix` is used)
 fixable = ["ALL"]
@@ -15,12 +15,13 @@ unfixable = []
 [tool.ruff.lint.per-file-ignores]
 # some flags disabled for interactive developing
 "*.ipynb" = [
+
     "B018", # Useless expression (used for printing cell output)
     "E402", # Import not at top of file
     "E501", # Line too long
     "F401", # Unused imports (optional, if you hate cleanup during dev)
     "N803", # Argument name should be lowercase (allow 'X' in functions)
-    "N806", # Variable name should be lowercase (allow 'X' in cells)    
+    "N806", # Variable name should be lowercase (allow 'X' in cells)
     # "W291", # no traling whitespace
     "W",
 ]

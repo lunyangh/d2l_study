@@ -3603,12 +3603,13 @@ def synthetic_data(w, b, num_examples):
     return X, reshape(y, (-1, 1))
 
 
-def sgd(params, lr, batch_size):
+def sgd(params: list[torch.Tensor], lr: float, batch_size: int):
     """Minibatch stochastic gradient descent.
 
     Defined in :numref:`sec_utils`"""
     with torch.no_grad():
         for param in params:
+            assert param.grad is not None
             param -= lr * param.grad / batch_size
             param.grad.zero_()
 
@@ -3629,10 +3630,10 @@ def load_data_fashion_mnist(batch_size, resize=None):
         trans.insert(0, transforms.Resize(resize))  # type:ignore
     trans = transforms.Compose(trans)
     mnist_train = torchvision.datasets.FashionMNIST(
-        root="../data", train=True, transform=trans, download=True
+        root="../../data", train=True, transform=trans, download=True
     )
     mnist_test = torchvision.datasets.FashionMNIST(
-        root="../data", train=False, transform=trans, download=True
+        root="../../data", train=False, transform=trans, download=True
     )
     return (
         torch_data.DataLoader(
@@ -3855,6 +3856,85 @@ def accuracy(y_hat, y):
         y_hat = argmax(y_hat, axis=1)
     cmp = astype(y_hat, y.dtype) == y
     return float(reduce_sum(astype(cmp, y.dtype)))
+
+
+"""
+additional functions for softmax regression in chapter 3
+"""
+
+
+def eval_accuracy(net, data_iter):
+    if isinstance(net, torch.nn.Module):
+        net.eval()  # set to evaluation mode
+    n_correct, n_total = 0, 0
+    for X, y in data_iter:
+        n_correct += accuracy(net(X), y)
+        n_total += y.numel()
+    return n_correct / n_total
+
+
+def softmax(x):
+    exp_x = torch.exp(x)
+    return exp_x / torch.sum(exp_x, dim=1, keepdim=True)
+
+
+def cross_entropy(y_hat, y):
+    return -torch.log(y_hat[range(len(y)), y])
+
+
+def train_epoch_ch3(net, train_iter, loss, updater):
+    if isinstance(net, torch.nn.Module):
+        net.train()
+    metric = Accumulator(3)
+    for X, y in train_iter:
+        y_hat = net(X)
+        _loss = loss(y_hat, y)
+        if isinstance(updater, torch.optim.Optimizer):
+            updater.zero_grad()
+            _loss.mean().backward()
+            updater.step()
+        else:
+            _loss.sum().backward()
+            updater(X.shape[0])
+
+        # accumulate model's eval on current sample
+        """
+        # this is to save time, instead of doing epoch eval on whole train set
+        after finish one epoch, we collect training metric on each sample during
+        training. the price is strictly speaking, model's weight has been changing
+        """
+        metric.add(
+            float(_loss.sum()),  # total loss (mean * n_sample)
+            accuracy(y_hat, y),  # n_correct
+            y.numel(),  # n total
+        )
+    return metric[0] / metric[2], metric[1] / metric[2]
+
+
+def train_ch3(net, train_iter, test_iter, loss, n_epoch, updater):
+    animator = Animator(
+        xlabel="epoch",
+        xlim=[1, n_epoch],
+        ylim=[0.3, 0.9],
+        legend=["train loss", "train acc", "test acc"],
+    )
+    train_metrics = None
+    test_acc = None
+    for epoch in range(n_epoch):
+        train_metrics = train_epoch_ch3(net, train_iter, loss, updater)
+        test_acc = eval_accuracy(net, test_iter)
+        animator.add(epoch + 1, train_metrics + (test_acc,))
+    assert train_metrics is not None and test_acc is not None
+    train_loss, train_acc = train_metrics
+
+
+def predict_ch3(net, test_iter: torch_data.DataLoader, n: int = 6):
+    """show predict"""
+    X, y = next(iter(test_iter))
+    trues = get_fashion_mnist_labels(y)
+    preds = get_fashion_mnist_labels(net(X).argmax(dim=1))
+    titles = [true + "\n" + pred for true, pred in zip(trues, preds)]
+    show_images(X[0:n].reshape((n, 28, 28)), 1, n, titles=titles[0:n])
 
 
 def download(url, folder="../data", sha1_hash=None):
