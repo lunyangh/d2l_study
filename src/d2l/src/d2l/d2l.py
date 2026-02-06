@@ -4013,9 +4013,9 @@ def evaluate_loss(net, data_iter, loss):
     metric = Accumulator(2)  # Sum of losses, no. of examples
     for X, y in data_iter:
         out = net(X)
-        y = reshape(y, out.shape)
-        loss = loss(out, y)
-        metric.add(reduce_sum(loss), size(loss))
+        y = y.reshape(out.shape)
+        _loss = loss(out, y)
+        metric.add(_loss.sum(), _loss.shape[0])
     return metric[0] / metric[1]
 
 
