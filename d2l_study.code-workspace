@@ -5,23 +5,13 @@
       "path": ".",
     },
     {
-      "name": "d2l-en",
-      "path": "../official_repo/d2l-en",
+      "path": "uv_env",
     },
     {
-      "name": "test_env",
-      "path": "../test_env",
-    },
-    {
-      "name": "pytorch",
-      "path": "../official_repo/jupyter_notebook/d2l-en/pytorch",
-    },
-    {
-      "name": "notes",
       "path": "../notes",
     },
   ],
   "settings": {
-    "python.defaultInterpreterPath": "../test_env/.venv/bin/python3",
+    "python.defaultInterpreterPath": "./uv_env/.venv/bin/python3",
   },
 }
