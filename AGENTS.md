@@ -14,6 +14,7 @@ Favor clear, educational changes over production-oriented abstraction.
 ## Environment and commands
 
 - Run Python or Jupyter commands from `uv_env/` with `uv`.
+- The current uv environment uses Python 3.12.13, PyTorch 2.2.2+cu121, and Torchvision 0.17.2+cu121.
 - The environment installs `../src/d2l` as an editable dependency, so notebook imports should use `import d2l.d2l as d2l`.
 - After dependency or environment changes, verify with:
 
