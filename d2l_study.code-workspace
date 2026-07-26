@@ -12,6 +12,6 @@
     },
   ],
   "settings": {
-    "python.defaultInterpreterPath": "./uv_env/.venv/bin/python3",
+    "python.defaultInterpreterPath": "${workspaceFolder:uv_env}/.venv/bin/python3",
   },
 }
