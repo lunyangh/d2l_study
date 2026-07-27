@@ -1,0 +1,424 @@
+export SHELL="$1"
+
+# Disable shell persistence if not interactive
+if [[ "$-" != *i* ]]; then
+  export DISABLE_SCREEN=1
+fi
+
+if [ -z "$VSCODE_RESOLVING_ENVIRONMENT" ] && [ -z "$DISABLE_SCREEN" ] && [ -z "$DISABLE_SHELL_PERSISTENCE" ]; then
+    # Skip when we're already inside a persistence session to avoid nesting:
+    # screen sets $STY (and TERM=screen*), litterm sets $LITTERM_SESSION. The
+    # active backend (screen or litterm) is selected by LAI_TERM_BACKEND and
+    # resolved inside the _*_session.sh wrappers.
+    if [[ "${TERM}" != "" ]] && [[ $TERM != screen* ]] && [[ -z "$STY" ]] && [[ -z "$LITTERM_SESSION" ]]; then
+        if [[ -n "$LAI_TERM_SESSION_NAME" ]]; then
+          if [[ ! -z "$LAI_TERM_RESTORE" ]]; then
+            # Resolve the token (a "<user>.<pid>" id from the picker, or a raw
+            # "cloudy-terminal-*" name from the code editor) to the listing's id.
+            # On a miss keep the raw token so the attach below can create-or-attach.
+            if [[ "$(/usr/local/bin/_term_backend.sh)" == "litterm" ]]; then
+              # litterm: pid lives in field 2.
+              _lai_resolved=$(/usr/local/bin/_list_sessions.sh 2>/dev/null | grep -F "$LAI_TERM_SESSION_NAME" | awk '{print $1; exit}')
+              _lai_resolved="${_lai_resolved%%.*}"
+            else
+              # screen: match id or embedded name, take field 1. A bare
+              # "screen -x <rawname>" fails to attach these multiuser sessions.
+              _lai_resolved=$(/usr/local/bin/_list_sessions.sh 2>/dev/null | grep -F "$LAI_TERM_SESSION_NAME" | awk '{print $1; exit}')
+            fi
+            [ -n "$_lai_resolved" ] && LAI_TERM_SESSION_NAME="$_lai_resolved"
+            unset _lai_resolved
+          fi
+
+          id="$LAI_TERM_SESSION_NAME"
+          # For a fresh named session (no restore) pre-create it; on restore the
+          # attach below (via -A / -x) reconnects, creating only if it's gone.
+          if [[ -z "$LAI_TERM_RESTORE" ]]; then
+            /usr/local/bin/_create_session.sh "$id"
+          fi
+        else
+          id=$(cat /proc/sys/kernel/random/uuid)
+          /usr/local/bin/_create_session.sh "$id"
+        fi
+        unset LAI_TERM_SESSION_NAME LAI_TERM_RESTORE
+
+        exec nice -n 20 /usr/local/bin/_attach_session.sh "$id"
+    fi
+fi
+
+# if inside a session, reset the cursor
+if [[ -n "$STY" ]]; then
+  tput csr 0 $(($(tput lines)-1))
+fi
+
+# set ulimits to allow NCCL communication
+current_limit=$(ulimit -Hn)
+# Some shells/platforms report "unlimited" here; do not treat that as a number.
+if [[ "$current_limit" != "unlimited" && "$current_limit" -lt "65536" ]]; then
+  ulimit -Hn 65536 2>/dev/null || true
+fi
+
+max_limit=$(ulimit -Hn)
+if [[ "$max_limit" == "unlimited" ]]; then
+  ulimit -Sn unlimited 2>/dev/null || true
+else
+  ulimit -Sn "$max_limit" 2>/dev/null || true
+fi
+
+# If VSCode is resolving the environment, remove some garbage that it picks up
+if [ -n "$VSCODE_RESOLVING_ENVIRONMENT" ]; then
+  unset module || true
+  unset switchml || true
+fi
+
+if [[ -z "$LAI_DISABLE_ZSH_HISTORY" ]]; then
+  export HISTFILE=$HOME/.${SHELL}_history
+else
+  unset HISTFILE
+fi
+
+# GITHUB_TOKEN is used by gh cli
+if [ ! -z "${GIT_PASSWORD}" ]; then
+  export GITHUB_TOKEN="${GIT_PASSWORD}"
+fi
+
+# Custom LS_COLORS - disabling the background of directories when permission is 777
+export LS_COLORS="rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=92:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:"
+
+if [[ -z "${LIGHTNING_ENVIRONMENT}" || "${LIGHTNING_ENVIRONMENT}" == "default" ]]; then
+  # The list of commands which depend on conda. Defined as a function (rather
+  # than an array) so it survives shell-snapshot mechanisms (e.g. Claude Code's)
+  # that capture functions/aliases but not plain array variables — without
+  # this, `load_conda`'s unalias loop becomes a no-op in a restored shell and
+  # sourcing conda.sh collides with the still-live `conda` alias.
+  lazy_conda_aliases() {
+    printf '%s\n' lightning conda pip pip3 python python3 poetry pipenv uv uvx
+  }
+
+  # Remove any aliases that are already defined
+  for lazy_conda_alias in $(lazy_conda_aliases)
+  do
+    unalias $lazy_conda_alias >/dev/null 2>/dev/null || true
+  done
+
+  load_conda() {
+    if [[ ! -f /.sentinels/.conda-restore-finished ]]; then
+      /settings/not-ready.sh
+      return $?
+    fi
+
+    # The first time we initialize, remove all aliases
+    for lazy_conda_alias in $(lazy_conda_aliases)
+    do
+      unalias $lazy_conda_alias
+    done
+
+    # >>> conda initialize >>>
+    # !! Contents within this block are managed by 'conda init' !!
+    __conda_setup="$('/home/zeus/miniconda3/bin/conda' 'shell.${SHELL}' 'hook' 2> /dev/null)"
+    if [ $? -eq 0 ]; then
+      eval "$__conda_setup"
+    else
+      if [ -f "/home/zeus/miniconda3/etc/profile.d/conda.sh" ]; then
+        . "/home/zeus/miniconda3/etc/profile.d/conda.sh"
+      else
+        export PATH="/home/zeus/miniconda3/bin:${PATH//:\/home\/zeus\/miniconda3\/bin/}"
+      fi
+    fi
+    unset __conda_setup
+    # <<< conda initialize <<<
+
+    unset __conda_prefix
+
+    # Re-define `load_conda` as a no-op, this ensures chained commands work when making multiple calls to `load_conda`
+    eval 'load_conda() { return 0; }'
+
+    conda activate cloudspace
+
+    if [ -f /commands/conda ]; then
+      eval 'conda() { /commands/conda "$@"; }'
+    fi
+
+    # Bring commands to the front of PATH
+    export PATH="/home/zeus/miniconda3/envs/cloudspace/bin:${PATH//:\/home\/zeus\/miniconda3\/envs\/cloudspace\/bin/}"
+    export PATH="/commands:${PATH//:\/commands/}"
+  }
+
+  load_conda_and_run() {
+    load_conda && "$@"
+  }
+
+  # Alias commands that depend on conda to first init / activate and then call the command
+  for lazy_conda_alias in $(lazy_conda_aliases)
+  do
+    alias $lazy_conda_alias="load_conda_and_run $lazy_conda_alias"
+  done
+
+  # manually activate conda for scripts
+  export CONDA_EXE="/home/zeus/miniconda3/bin/conda"
+  export CONDA_PYTHON_EXE="/home/zeus/miniconda3/bin/python"
+  export CONDA_PREFIX="/home/zeus/miniconda3/envs/cloudspace"
+  export CONDA_DEFAULT_ENV="cloudspace"
+  export PATH="/home/zeus/miniconda3/condabin:${PATH//:\/home\/zeus\/miniconda3\/condabin/}"
+  export PATH="/home/zeus/miniconda3/envs/cloudspace/bin:${PATH//:\/home\/zeus\/miniconda3\/envs\/cloudspace\/bin/}"
+fi
+
+source "/settings/.envrc"
+
+# load node if we can
+if [[ -f /.sentinels/.conda-restore-finished ]] && [[ -z "${LIGHTNING_ENVIRONMENT}" || "${LIGHTNING_ENVIRONMENT}" == "default" ]]; then
+  load_node
+fi
+
+export BASH_ENV="/settings/.envrc"
+export ZSHENV="/settings/.envrc"
+
+export PATH="/commands:${PATH//:\/commands/}"
+# make sure we can access cuda stuff
+export PATH="/usr/local/cuda/bin:/usr/local/nvidia/bin:/usr/local/cuda/bin:$PATH"
+# make sure we can access other stuff
+export PATH="/home/zeus/.local/bin:${PATH//:\/home\/zeus\/.local/}"
+export PATH="${PATH//:\/usr\/games/}:/usr/games"
+
+which () {
+  if [[ "$@" == *which* ]]; then
+    echo "which: shell built-in command"
+  elif [[ "$@" == *conda* ]]; then
+    echo "/home/zeus/miniconda3/condabin/conda"
+  else
+    PATH="${PATH//\/commands/}" command which $@
+  fi
+}
+
+if [[ "${SHELL}" == "bash" ]]; then
+  PS1=$'\U26A1'" \w "
+
+  # Ensure that history is saved right away (rather than waiting for log out)
+  PROMPT_COMMAND='history -a'
+
+  # If a command isn't found and the env isn't ready yet, give a warning
+  command_not_found_handle() {
+    if [[ ! -f /.sentinels/.conda-restore-finished || ! -f /.sentinels/.lightning-apt-loaded ]]; then
+      /settings/not-ready.sh
+      return $?
+    fi
+
+    printf "bash: %s: command not found\n" "$1" >&2
+    return 127
+  }
+
+  # --- VS Code shell integration inside persisted sessions (bash) ---
+  # Same rationale as the zsh block below: the bootstrap `exec`s into the
+  # persistence backend, so the interactive shell is the backend's inner bash,
+  # not the one VS Code injected into. Re-source the integration script so OSC
+  # 633 (command decorations, cwd / exit-code, the IDE handshake the Claude CLI
+  # uses) works. No-op when VS Code already injected ($VSCODE_SHELL_INTEGRATION
+  # set); `unset VSCODE_INJECTION` selects the script's manual-install path.
+  #
+  # Gated on `$LITTERM_SESSION` so this ONLY fires inside a litterm session, not
+  # under the default screen backend: screen emulates the terminal and absorbs
+  # OSC 633, so re-sourcing there is pointless, and it would be a behaviour change
+  # on the default path (and would override a user who disabled shell integration).
+  if [[ $- == *i* && -n "$LITTERM_SESSION" && "$TERM_PROGRAM" == "vscode" && -z "$VSCODE_SHELL_INTEGRATION" ]]; then
+    _vsc_si_rc="/usr/lib/code-server/lib/vscode/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh"
+    if [[ -f "$_vsc_si_rc" ]]; then
+      unset VSCODE_INJECTION
+      source "$_vsc_si_rc"
+    fi
+    unset _vsc_si_rc
+  fi
+fi
+
+if [[ "${SHELL}" == "zsh" ]]; then
+  # Per-session command history used by the screen session listing. Key off the
+  # active backend's session id: screen exposes $STY, litterm exposes
+  # $LITTERM_SESSION (litterm's own listing reads the last command via OSC 633,
+  # so this file is only actually consumed for the screen backend).
+  _lai_cmd_history_key="${STY:-${LITTERM_SESSION:-none}}"
+  echo "zsh" >> /tmp/cmd_history.$_lai_cmd_history_key
+
+  # Load git branch information
+  branch=""
+  preexec() {
+    echo "$1" >> /tmp/cmd_history.${STY:-${LITTERM_SESSION:-none}}
+  }
+
+  ignore_data_dirs() {
+    case "$PWD" in
+      /teamspace/studios|/teamspace/studios/*) return 1 ;;
+      /teamspace/*) return 0 ;;
+    esac
+    return 1
+  }
+
+  precmd() {
+    if ignore_data_dirs; then
+      branch=""
+    else
+      read branch < <(git branch 2>/dev/null | sed -n '/\* /s///p')
+    fi
+  }
+
+  # Prompt
+  # The prompt uses parameter expansion for branch/path. Make this explicit so
+  # restored zsh sessions do not render the raw ${...} expression.
+  setopt PROMPT_SUBST
+  PROMPT=$'\U26A1'' ${branch:+$branch }${PWD/#$HOME/~} '
+
+  # Append to history immediately
+  setopt INC_APPEND_HISTORY
+
+  # Don't keep commands starting from space in history
+  setopt HIST_IGNORE_SPACE
+
+  # Warning hook
+  autoload -Uz add-zsh-hook
+  warning_function () {
+    ignore_data_dirs && return
+    if [[ $(pwd -P) != \/${FILESYSTEM_TOP_FOLDER_NAME}* ]]; then
+      print "⚠️  Warning: Files created outside the \'/${FILESYSTEM_TOP_FOLDER_NAME}/studios/this_studio\' folder won't be saved to your Drive."
+    fi
+  }
+  add-zsh-hook precmd warning_function
+
+  mount_weka_warning() {
+    MOUNT_PREFIX="/teamspace/weka_connections"
+    emulate -L zsh
+    local full_cmd=$1
+    local cmd=${full_cmd%%[[:space:]]*}
+    local rest=${full_cmd#${cmd}}
+
+    # only care about cd and ls
+    [[ $cmd != cd && $cmd != ls ]] && return
+
+    # build list of paths the user’s targeting
+    local targets
+    if [[ $cmd == ls && -z ${rest//[[:space:]]/} ]]; then
+      targets=("$PWD")
+    else
+      targets=(${(z)rest})
+    fi
+
+    for t in "${targets[@]}"; do
+      [[ $t != /* ]] && t="$PWD/$t"
+
+      # if the path is under our prefix
+      if [[ $t == $MOUNT_PREFIX* ]]; then
+        # look in the mount table instead of mountpoint
+        if ! mount | grep -q " on $MOUNT_PREFIX"; then
+          print -u2 "⌛ This Weka drive is still being mounted. Try again in 5 minutes."
+          return
+        fi
+      fi
+    done
+  }
+  add-zsh-hook preexec mount_weka_warning
+
+  # If a command isn't found and the env isn't ready yet, give a warning
+  command_not_found_handler() {
+    if [[ ! -f /.sentinels/.conda-restore-finished || ! -f /.sentinels/.lightning-apt-loaded ]]; then
+      /settings/not-ready.sh
+      return $?
+    fi
+
+    printf "zsh: command not found: %s\n" "$1" >&2
+    return 127
+  }
+
+  # --- VS Code shell integration inside persisted sessions ---
+  # The `exec` at the top of this file replaces the shell VS Code injected its
+  # integration into; the persistence backend's inner shell re-runs ~/.zshrc with
+  # ZDOTDIR=$HOME, so the integration (command decorations, cwd / exit-code
+  # reporting, the IDE handshake the Claude CLI relies on) is lost. Re-source it.
+  #
+  # The `-z "$VSCODE_SHELL_INTEGRATION"` guard makes this a no-op in the normal
+  # case, where VS Code's own injection has already set it. `unset VSCODE_INJECTION`
+  # selects the script's documented manual-install path (left set, it would
+  # re-source $USER_ZDOTDIR/.zshrc and recurse back into this file via ~/.zshrc).
+  #
+  # Gated on `$LITTERM_SESSION` so this ONLY fires inside a litterm session, not
+  # under the default screen backend: screen emulates the terminal and absorbs
+  # OSC 633, so re-sourcing there is pointless, and it would be a behaviour change
+  # on the default path (and would override a user who disabled shell integration).
+  if [[ -o interactive && -n "$LITTERM_SESSION" && "$TERM_PROGRAM" == "vscode" && -z "$VSCODE_SHELL_INTEGRATION" ]]; then
+    _vsc_si_rc="/usr/lib/code-server/lib/vscode/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-rc.zsh"
+    if [[ -f "$_vsc_si_rc" ]]; then
+      unset VSCODE_INJECTION
+      source "$_vsc_si_rc"
+    fi
+    unset _vsc_si_rc
+  fi
+fi
+
+# add ~/.local/bin to PATH to have some place where they are persisted
+export PATH="${HOME}/.local/bin:${PATH//:\/${HOME}\/.local\/bin/}"
+
+# Make create-react-app dev server use the correct port for hot-reload
+# Workaround the issue: https://github.com/facebook/create-react-app/issues/11897
+# DO NOT REMOVE: this is required for React hot-reload to work in Studio
+export WDS_SOCKET_PORT=0
+
+if [[ $(pwd -P) != \/${FILESYSTEM_TOP_FOLDER_NAME}* ]]; then
+  cd $HOME
+fi
+
+# make pre-commit use cache outside the home-dir to prevent repos showing up in vscode git tool
+# see https://pre-commit.com/#managing-ci-caches for details
+export XDG_CACHE_HOME=/home/zeus/.cache
+# specify runtime working directory to prevent silent failures due to partial XDG spec
+export XDG_RUNTIME_DIR="/run/user/1000"
+# make pre-commit create venvs in the optimized dir
+export PRE_COMMIT_HOME="/system/conda/miniconda3/pre-commit"
+
+# persist HF cache in the HOME
+export HF_HOME="${HOME}/.cache/huggingface"
+
+# prevent node running out of memory
+export NODE_OPTIONS="--max-old-space-size=8192"
+
+# force python to always flush streams
+export PYTHONUNBUFFERED="true"
+
+# configure uv for studios
+export UV_LINK_MODE="symlink"
+export UV_CACHE_DIR="/system/conda/miniconda3/uv/cache"
+export UV_TOOL_DIR="/system/conda/miniconda3/uv/tools"
+export UV_PYTHON_INSTALL_DIR="/system/conda/miniconda3/uv/python"
+export UV_MANAGED_PYTHON="1"
+export UV_LIGHTNING_VIRTUALENV_ROOT="/system/conda/miniconda3/uv/venvs"
+
+# possible configuration for linuxbrew
+# cannot change the location in the installer so we just go with it
+export HOMEBREW_PREFIX="/home/linuxbrew"
+export HOMEBREW_REPOSITORY="$HOMEBREW_PREFIX"
+export HOMEBREW_CACHE="/tmp/brew/.cache"
+export NONINTERACTIVE="1"
+# add brew to PATH to make brew available
+export PATH="$HOMEBREW_PREFIX/.linuxbrew/bin/:${PATH//:\/$HOMEBREW_PREFIX\/.linuxbrew\/bin/}"
+# source the shellenv for autocomplete etc
+[ -f "$HOMEBREW_PREFIX/.linuxbrew/bin/brew" ] && eval "$($HOMEBREW_PREFIX/.linuxbrew/bin/brew shellenv)"
+
+# add support of scrolling with mouse wheel
+# --no-init: don't clear the screen on start (preserves output/screen scrollback)
+# --raw-control-chars: allow control characters to be displayed (colors)
+export LESS='--no-init --raw-control-chars --mouse --wheel-lines=3'
+
+# export env vars to GH and GL config.
+# prevents git auth from failing in CI.
+export GH_CONFIG_DIR="/home/zeus/.config/gh"
+export GLAB_CONFIG_DIR="/home/zeus/.config/glab"
+
+# default GPU execution environment to be headless by default
+# would require a X-Server/Wayland otherwise
+export EGL_PLATFORM=surfaceless
+
+# export env variables
+if [ -f /system/.env ]; then
+  set -o allexport
+  source /system/.env > /dev/null 2>&1
+  set +o allexport
+fi
+
+# source users studiorc, should be done last so it can overwrite things
+if [ -f ~/.lightning_studio/.studiorc ]; then
+  source ~/.lightning_studio/.studiorc
+fi

@@ -1,0 +1,487 @@
+{
+  /* Files */
+  // auto save files
+  "files.autoSave": "afterDelay",
+  "files.trimTrailingWhitespace": true,
+  "files.exclude": {
+    "**/.git": true,
+    "**/.svn": true,
+    "**/.hg": true,
+    "**/.DS_Store": true,
+    "**/Thumbs.db": true,
+    "**/__pychace__": true,
+    "**/.tspkg": true,
+    "**/CVS": true,
+    "**/.project": true,
+  },
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/.hg/store/**": true,
+  },
+  "files.watcherInclude": [],
+
+  /* Window & workbench */
+  "workbench.iconTheme": "material-icon-theme",
+  "window.restoreWindows": "all",
+  // "window.zoomLevel": 0.25,
+  // top widow title
+  "window.title": "${dirty}${activeEditorShort}${separator}${rootPath}${separator}${appName}",
+  // edittor group empty one not close
+  "workbench.editor.closeEmptyGroups": false,
+  "workbench.panel.defaultLocation": "right",
+  // stop preview mode, set to double clip to open
+  "workbench.editor.enablePreview": false,
+  "workbench.list.openMode": "doubleClick",
+  // window setting when jump to definiton, if file already open, use old window, not create new one
+  "workbench.editor.revealIfOpen": true,
+  // search in filter explorer
+  "workbench.list.defaultFindMode": "filter",
+  "workbench.list.typeNavigationMode": "automatic",
+  "workbench.settings.enableNaturalLanguageSearch": false,
+  // color theme
+  "workbench.colorTheme": "Atom One Dark",
+  // trust
+  "security.workspace.trust.untrustedFiles": "prompt",
+  "workbench.editorAssociations": {
+    "*.ipynb": "jupyter-notebook",
+  },
+
+  /* Explorer */
+  // turn on behavior having file exploror scroll to active file
+  "explorer.autoReveal": true,
+  "explorer.openEditors.visible": 20,
+  "problems.autoReveal": true,
+
+  /* Explorer Core */
+  // font setting, line wrapup behavior
+  "editor.fontFamily": "Fira code Light",
+  "editor.fontLigatures": true,
+  "editor.fontSize": 11,
+  "editor.tabSize": 4,
+  "editor.rulers": [88],
+  // comment color
+  "editor.tokenColorCustomizations": {
+    "[Atom One Dark]": {
+      // "comments": "#7f848e",
+      // "comments": "#07db72",
+      "comments": "#75955f",
+    },
+  },
+  "editor.autoIndent": "brackets",
+  "editor.formatOnSave": true,
+  "editor.formatOnPaste": false,
+  "editor.formatOnType": false,
+
+  /* Editor Behavior */
+  // highlight within current file
+  "editor.occurrencesHighlight": "off",
+  "editor.selectionHighlight": true,
+  // editor color paired brackets, turn off
+  "editor.guides.bracketPairs": true,
+  "editor.bracketPairColorization.enabled": true,
+  // smart select
+  "editor.smartSelect.selectSubwords": false,
+  // minimap off
+  "editor.minimap.enabled": false,
+  "editor.minimap.renderCharacters": false,
+  // resolve multiple definition cases
+  "editor.gotoLocation.multipleDefinitions": "goto",
+  "editor.gotoLocation.multipleTypeDefinitions": "goto",
+  // diable ctrl + click for go to defintion
+  "editor.multiCursorModifier": "ctrlCmd",
+  // turn off for performance
+  "editor.codeLens": false,
+  "editor.parameterHints.enabled": false,
+  // modify on editing.
+  "editor.pasteAs.preferences": [
+    "markdown.link.url",
+    "uri.path.absolute",
+    "text.updateLinks.markdown",
+    "text.plain",
+  ],
+
+  /* Breadcrumbs */
+  // only use breadcrumbs for access files
+  "breadcrumbs.showClasses": false,
+  "breadcrumbs.showBooleans": false,
+  "breadcrumbs.showArrays": false,
+  "breadcrumbs.showConstants": false,
+  "breadcrumbs.showConstructors": false,
+  "breadcrumbs.showEnumMembers": false,
+  "breadcrumbs.showEnums": false,
+  "breadcrumbs.showEvents": false,
+  "breadcrumbs.showFields": false,
+  "breadcrumbs.showFunctions": false,
+  "breadcrumbs.showInterfaces": false,
+  "breadcrumbs.showKeys": false,
+  "breadcrumbs.showMethods": false,
+  "breadcrumbs.showModules": false,
+  "breadcrumbs.showNamespaces": false,
+  "breadcrumbs.showNull": false,
+  "breadcrumbs.showNumbers": false,
+  "breadcrumbs.showObjects": false,
+  "breadcrumbs.showOperators": false,
+  "breadcrumbs.showPackages": false,
+  "breadcrumbs.showProperties": false,
+  "breadcrumbs.showStrings": false,
+  "breadcrumbs.showStructs": false,
+  "breadcrumbs.showTypeParameters": false,
+  "breadcrumbs.showVariables": false,
+
+  /* scroll & mouse */
+  "editor.mouseWheelScrollSensitivity": 4,
+
+  /* python language */
+  "[python]": {
+    "editor.fontFamily": "Fira Code Light",
+    "editor.fontLigatures": true,
+    "editor.fontSize": 11,
+    "editor.wordWrap": "wordWrapColumn",
+    "editor.wordWrapColumn": 88,
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.codeActionsOnSave": {
+      "source.fixAll.pylance": "never",
+      "source.fixAll.ruff": "explicit",
+      "source.organizeImports.ruff": "explicit",
+    },
+  },
+  "python.defaultInterpreterPath": "/usr/local/bin/python3",
+  "autoDocstring.docstringFormat": "numpy",
+
+  /* pylance */
+  "python.analysis.autoSearchPaths": true,
+  "python.analysis.indexing": true,
+  "python.analysis.typeCheckingMode": "basic",
+  "python.analysis.diagnosticSeverityOverrides": {
+    "reportMissingImports": "none",
+    "reportMissingModuleSource": "none",
+    "reportUnusedVariable": "information",
+  },
+  "python.analysis.packageIndexDepths": [
+    {
+      "name": "sklearn",
+      "depth": 1,
+    },
+    {
+      "name": "matplotlib",
+      "depth": 2,
+    },
+    {
+      "name": "scipy",
+      "depth": 2,
+    },
+    {
+      "name": "pandas",
+      "depth": 1,
+    },
+    {
+      "name": "numpy",
+      "depth": 1,
+    },
+    {
+      "name": "cuda",
+      "depth": 3,
+      "includeAllSymbols": true,
+    },
+  ],
+  "python.analysis.autoFormatStrings": true,
+  "python.analysis.diagnosticMode": "openFilesOnly",
+  "python.analysis.useLibraryCodeForTypes": false,
+  // no type stub by default
+  "python.analysis.stubPath": "typings",
+
+  /* git */
+  "git.openDiffOnClick": false,
+  "git.confirmSync": false,
+  "git.openRepositoryInParentFolders": "never",
+
+  /* claude code */
+  "chat.fontSize": 15,
+  "claudeCode.userTerminal": false,
+  "claudeCode.respectGitIgnore": false,
+
+  /* linting  */
+  // config ruff
+  "ruff.enable": true,
+  "ruff.fixAll": true,
+  "ruff.lint.enable": true,
+  "ruff.organizeImports": true,
+  "ruff.configurationPreference": "filesystemFirst",
+  // error lens config
+  "errorLens.enabled": true,
+  "errorLens.enabledDiagnosticLevels": ["error", "warning", "info"],
+
+  /* autocomplete suggestions */
+  // whether sorting flavor use words close to cursor
+  "editor.suggest.localityBonus": true,
+  "editor.acceptSuggestionOnCommitCharacter": false,
+  "editor.suggest.insertMode": "insert",
+  // diable inline completion
+  "editor.inlineSuggest.enabled": false,
+  "emmet.useInlineCompletions": false,
+  // control if press tab directly insert suggestion without widget.
+  "editor.tabCompletion": "off",
+  // if suggestions can be accepted with Enter key in additiona to tab
+  "editor.acceptSuggestionOnEnter": "on",
+  "editor.quickSuggestions": {
+    "other": "on",
+    "comments": "on",
+    "strings": "on",
+  },
+  "editor.snippetSuggestions": "inline",
+  "editor.suggest.snippetsPreventQuickSuggestions": false,
+  "editor.suggest.showSnippets": true,
+  "editor.suggest.showFiles": false,
+  "editor.suggest.showFolders": false,
+  "editor.suggest.showInterfaces": false,
+  "editor.suggest.showIssues": false,
+  "editor.suggest.showKeywords": false,
+  "editor.suggestSelection": "recentlyUsedByPrefix",
+  "editor.suggest.shareSuggestSelections": true,
+  "editor.suggest.showWords": false,
+  "editor.suggest.showUsers": false,
+
+  "editor.suggest.showDeprecated": false,
+  "editor.suggest.showCustomcolors": false,
+  "editor.suggest.showConstructors": false,
+  "editor.suggest.showColors": false,
+  "editor.suggest.showEvents": false,
+  "editor.suggest.showIcons": false,
+  "editor.suggest.showInlineDetails": false,
+  "editor.suggest.showStructs": false,
+  "editor.suggest.showTypeParameters": false,
+  "editor.suggest.showUnits": false,
+
+  /* Notebook */
+  "notebook.lineNumbers": "on",
+  "notebook.output.scrolling": true,
+  "notebook.output.textLineLimit": 35,
+  "notebook.scrolling.revealNextCellOnExecute": "fullCell",
+  "output.smartScroll.enabled": false,
+  "notebook.markup.fontSize": 11,
+  "notebook.output.fontSize": 11,
+  "notebook.cellToolbarLocation": {
+    "default": "hidden",
+  },
+  "notebook.insertToolbarLocation": "hidden",
+  "notebook.showCellStatusBar": "visibleAfterExecute",
+  "notebook.formatOnCellExecution": true,
+  "notebook.compactView": true,
+  "notebook.formatOnSave.enabled": true,
+  "notebook.stickyScroll.enabled": true,
+  "notebook.inlineValues": "off",
+  "notebook.codeActionsOnSave": {
+    "notebook.source.organizeImports.ruff": "explicit",
+    "notebook.source.fixAll.ruff": "explicit",
+  },
+
+  /* other language */
+  "[markdown]": {
+    "editor.fontFamily": "Fira Code Light",
+    "editor.fontLigatures": true,
+    "editor.fontSize": 11,
+    "editor.wordWrap": "bounded",
+    "editor.wordWrapColumn": 120,
+    "editor.rulers": [120],
+    "editor.defaultFormatter": "yzhang.markdown-all-in-one",
+  },
+  "markdown.extension.list.indentationSize": "inherit",
+  "markdown.extension.tableFormatter.normalizeIndentation": true,
+  "markdown.extension.preview.autoShowPreviewToSide": false,
+  "markdown-preview-enhanced.automaticallyShowPreviewOfMarkdownBeingEdited": false,
+  "markdown-preview-enhanced.previewTheme": "newsprint.css",
+  "markdown-preview-enhanced.liveUpdate": true,
+  "markdown-preview-enhanced.revealjsTheme": "none.css",
+  "markdown-preview-enhanced.codeBlockTheme": "vs.css",
+  "markdown.preview.fontSize": 11,
+  "markdown.preview.fontFamily": "Fira Code Light",
+  "[xml]": {
+    "editor.fontFamily": "Fira Code Light",
+    "editor.fontLigatures": true,
+    "editor.wordWrap": "bounded",
+    "editor.wordWrapColumn": 180,
+    "editor.rulers": [190],
+    "editor.linkedEditing": true,
+    "editor.formatOnPaste": false,
+  },
+  "[json]": {
+    "editor.folding": true,
+    "editor.showFoldingControls": "always",
+    "editor.wordWrap": "bounded",
+    "editor.wordWrapColumn": 120,
+    "editor.rulers": [120],
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+  },
+  "[jsonc]": {
+    "editor.folding": true,
+    "editor.showFoldingControls": "always",
+    "editor.wordWrap": "bounded",
+    "editor.wordWrapColumn": 120,
+    "editor.rulers": [120],
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+  },
+  "[dockerfile]": {
+    "editor.wordWrap": "wordWrapColumn",
+    "editor.wordWrapColumn": 120,
+    "editor.fontFamily": "Fira Code Light",
+    "editor.fontLigatures": true,
+    "editor.fontWeight": "normal",
+    "editor.rulers": [120],
+  },
+  "[javascript]": {
+    "editor.indentSize": 2,
+    "editor.insertSpaces": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+  },
+
+  /* Terminal */
+  "workbench.colorCustomizations": {
+    // configure notebook
+    "editor.foreground": "#bbbbcc",
+    "notebook.cellEditorBackground": "#282c34",
+    // "notebook.cellBorderColor": "#474756",
+    "notebook.cellBorderColor": "#abb2bf26", // same color as ruler
+    "notebook.outputContainerBackgroundColor": "#21252b",
+    "notebook.outputContainerBorderColor": "#454546",
+
+    // "statusBar.background": "#8FBCBB",
+    // "statusBar.noFolderBackground": "#8FBCBB",
+    // "statusBar.debuggingBackground": "#8FBCBB",
+    // "statusBar.foreground": "#434C5E",
+    // "statusBar.debuggingForeground": "#434C5E",
+  },
+  "terminal.integrated.cursorBlinking": true,
+  "terminal.integrated.cursorStyle": "line",
+  "terminal.integrated.commandsToSkipShell": [
+    "workbench.action.navigateLeft",
+    "workbench.action.navigateRight",
+    "workbench.action.navigateUp",
+    "workbench.action.navigateDown",
+  ],
+  "terminal.integrated.sendKeybindingsToShell": false,
+  "terminal.integrated.mouseWheelScrollSensitivity": 3,
+  "terminal.integrated.fastScrollSensitivity": 3,
+  "terminal.integrated.fontWeight": "normal",
+  "terminal.integrated.fontWeightBold": "normal",
+  "terminal.integrated.scrollback": 10000,
+  "terminal.integrated.defaultLocation": "view",
+  "terminal.integrated.fontSize": 13,
+  "terminal.integrated.fontFamily": "Fira Code Light",
+  "terminal.integrated.copyOnSelection": true,
+  "terminal.integrated.rightClickBehavior": "paste",
+  // speed up terminal environment activation
+  "python-envs.terminal.autoActivationType": "command",
+
+  /* search */
+  "search.defaultViewMode": "tree",
+  "search.collapseResults": "auto",
+  "search.maxResults": 200,
+  "search.searchEditor.reusePriorSearchConfiguration": true,
+  "search.useGlobalIgnoreFiles": true,
+  "search.exclude": {
+    "**/__pycache__": true,
+    "**/*.csv": true,
+    "**/*.json": true,
+    "**/*.pyi": true,
+    "**/*.vim.session": true,
+    "**/*.xlsx": true,
+    "**/node_modules": true,
+    "**/bower_components": true,
+    "**/*.code-search": true,
+  },
+  // turn off performance
+  "search.searchOnType": false,
+  "search.followSymlinks": false,
+
+  /* debugger */
+  "debug.showInStatusBar": "always",
+  "debug.confirmOnExit": "always",
+  "debug.inlineValues": "off",
+  "debug.console.acceptSuggestionOnEnter": "on",
+  "launch": {
+    "configurations": [
+      {
+        "name": "test",
+        "type": "python",
+        "request": "launch",
+        "python": "${command:python.interpreterPath}",
+        "program": "${file}",
+        "args": ["-t"],
+        "console": "internalConsole",
+        "justMyCode": true,
+        "stopOnEntry": false,
+        "redirectOutput": true,
+        "presentation": {
+          "hidden": false,
+          "group": "normal",
+          "order": 1,
+        },
+        "env": {
+          "PYDEVD_WARN_EVALUATION_TIMEOUT": "100",
+          "PYDEVD_WARN_SLOW_RESOLVE_TIMEOUT": "20",
+        },
+      },
+      {
+        "name": "no_arg",
+        "type": "python",
+        "request": "launch",
+        "python": "${command:python.interpreterPath}",
+        "program": "${file}",
+        "args": [],
+        "console": "internalConsole",
+        "justMyCode": true,
+        "stopOnEntry": false,
+        "redirectOutput": true,
+        "presentation": {
+          "hidden": false,
+          "group": "normal",
+          "order": 2,
+        },
+        "env": {
+          "PYDEVD_WARN_EVALUATION_TIMEOUT": "100",
+          "PYDEVD_WARN_SLOW_RESOLVE_TIMEOUT": "20",
+        },
+      },
+      {
+        "name": "restart",
+        "type": "python",
+        "request": "launch",
+        "python": "${command:python.interpreterPath}",
+        "program": "${file}",
+        "args": ["-r"],
+        "console": "internalConsole",
+        "justMyCode": true,
+        "stopOnEntry": false,
+        "redirectOutput": true,
+        "presentation": {
+          "hidden": false,
+          "group": "normal",
+          "order": 3,
+        },
+        "env": {
+          "PYDEVD_WARN_EVALUATION_TIMEOUT": "100",
+          "PYDEVD_WARN_SLOW_RESOLVE_TIMEOUT": "20",
+        },
+      },
+    ],
+    "compounds": [],
+  },
+
+  "accessibility.signals.notebookCellCompleted": {
+    "sound": "off",
+    "announcement": "auto",
+  },
+  "accessibility.signals.notebookCellFailed": {
+    "sound": "off",
+    "announcement": "auto",
+  },
+
+  /* Zen Mode */
+  "zenMode.hideLineNumbers": false,
+
+  /* update  */
+  "update.showReleaseNotes": true,
+  "jupyter.askForKernelRestart": false,
+  "chat.viewSessions.orientation": "stacked",
+}

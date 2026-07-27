@@ -218,3 +218,5 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+# Keep documented terminal shell snapshots under version control.
+!knowledge/terminal/**/.zshrc
