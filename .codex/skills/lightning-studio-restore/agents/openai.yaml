@@ -1,0 +1,4 @@
+interface:
+  display_name: "Lightning Studio Restore"
+  short_description: "Restore this repo after Lightning machine changes"
+  default_prompt: "Use $lightning-studio-restore to restore and verify this D2L Studio."

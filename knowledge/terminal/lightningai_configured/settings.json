@@ -24,7 +24,7 @@
   /* Window & workbench */
   "workbench.iconTheme": "material-icon-theme",
   "window.restoreWindows": "all",
-  // "window.zoomLevel": 0.25,
+  "window.zoomLevel": 0,
   // top widow title
   "window.title": "${dirty}${activeEditorShort}${separator}${rootPath}${separator}${appName}",
   // edittor group empty one not close
@@ -91,7 +91,7 @@
   // diable ctrl + click for go to defintion
   "editor.multiCursorModifier": "ctrlCmd",
   // turn off for performance
-  "editor.codeLens": false,
+  "editor.codeLens": true,
   "editor.parameterHints.enabled": false,
   // modify on editing.
   "editor.pasteAs.preferences": [
@@ -197,7 +197,9 @@
   "git.openRepositoryInParentFolders": "never",
 
   /* claude code */
-  "chat.fontSize": 15,
+  "chat.fontSize": 14,
+  "chat.fontFamily": "Fira Code Light, monospace",
+  "chat.editor.fontFamily": "Fira Code Light, monospace",
   "claudeCode.userTerminal": false,
   "claudeCode.respectGitIgnore": false,
 
