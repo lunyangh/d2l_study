@@ -12,12 +12,12 @@
     "**/__pychace__": true,
     "**/.tspkg": true,
     "**/CVS": true,
-    "**/.project": true,
+    "**/.project": true
   },
   "files.watcherExclude": {
     "**/.git/objects/**": true,
     "**/.git/subtree-cache/**": true,
-    "**/.hg/store/**": true,
+    "**/.hg/store/**": true
   },
   "files.watcherInclude": [],
 
@@ -44,7 +44,7 @@
   // trust
   "security.workspace.trust.untrustedFiles": "prompt",
   "workbench.editorAssociations": {
-    "*.ipynb": "jupyter-notebook",
+    "*.ipynb": "jupyter-notebook"
   },
 
   /* Explorer */
@@ -65,8 +65,8 @@
     "[Atom One Dark]": {
       // "comments": "#7f848e",
       // "comments": "#07db72",
-      "comments": "#75955f",
-    },
+      "comments": "#75955f"
+    }
   },
   "editor.autoIndent": "brackets",
   "editor.formatOnSave": true,
@@ -98,7 +98,7 @@
     "markdown.link.url",
     "uri.path.absolute",
     "text.updateLinks.markdown",
-    "text.plain",
+    "text.plain"
   ],
 
   /* Breadcrumbs */
@@ -143,8 +143,8 @@
     "editor.codeActionsOnSave": {
       "source.fixAll.pylance": "never",
       "source.fixAll.ruff": "explicit",
-      "source.organizeImports.ruff": "explicit",
-    },
+      "source.organizeImports.ruff": "explicit"
+    }
   },
   "python.defaultInterpreterPath": "/usr/local/bin/python3",
   "autoDocstring.docstringFormat": "numpy",
@@ -156,34 +156,34 @@
   "python.analysis.diagnosticSeverityOverrides": {
     "reportMissingImports": "none",
     "reportMissingModuleSource": "none",
-    "reportUnusedVariable": "information",
+    "reportUnusedVariable": "information"
   },
   "python.analysis.packageIndexDepths": [
     {
       "name": "sklearn",
-      "depth": 1,
+      "depth": 1
     },
     {
       "name": "matplotlib",
-      "depth": 2,
+      "depth": 2
     },
     {
       "name": "scipy",
-      "depth": 2,
+      "depth": 2
     },
     {
       "name": "pandas",
-      "depth": 1,
+      "depth": 1
     },
     {
       "name": "numpy",
-      "depth": 1,
+      "depth": 1
     },
     {
       "name": "cuda",
       "depth": 3,
-      "includeAllSymbols": true,
-    },
+      "includeAllSymbols": true
+    }
   ],
   "python.analysis.autoFormatStrings": true,
   "python.analysis.diagnosticMode": "openFilesOnly",
@@ -198,8 +198,9 @@
 
   /* claude code */
   "chat.fontSize": 14,
-  "chat.fontFamily": "Fira Code Light, monospace",
-  "chat.editor.fontFamily": "Fira Code Light, monospace",
+  "chat.fontFamily": "Fira Code Light",
+  "chat.editor.fontFamily": "Fira Code Light",
+  "chat.viewSessions.orientation": "stacked",
   "claudeCode.userTerminal": false,
   "claudeCode.respectGitIgnore": false,
 
@@ -229,7 +230,7 @@
   "editor.quickSuggestions": {
     "other": "on",
     "comments": "on",
-    "strings": "on",
+    "strings": "on"
   },
   "editor.snippetSuggestions": "inline",
   "editor.suggest.snippetsPreventQuickSuggestions": false,
@@ -264,7 +265,7 @@
   "notebook.markup.fontSize": 11,
   "notebook.output.fontSize": 11,
   "notebook.cellToolbarLocation": {
-    "default": "hidden",
+    "default": "hidden"
   },
   "notebook.insertToolbarLocation": "hidden",
   "notebook.showCellStatusBar": "visibleAfterExecute",
@@ -275,7 +276,7 @@
   "notebook.inlineValues": "off",
   "notebook.codeActionsOnSave": {
     "notebook.source.organizeImports.ruff": "explicit",
-    "notebook.source.fixAll.ruff": "explicit",
+    "notebook.source.fixAll.ruff": "explicit"
   },
 
   /* other language */
@@ -286,7 +287,7 @@
     "editor.wordWrap": "bounded",
     "editor.wordWrapColumn": 120,
     "editor.rulers": [120],
-    "editor.defaultFormatter": "yzhang.markdown-all-in-one",
+    "editor.defaultFormatter": "yzhang.markdown-all-in-one"
   },
   "markdown.extension.list.indentationSize": "inherit",
   "markdown.extension.tableFormatter.normalizeIndentation": true,
@@ -305,7 +306,7 @@
     "editor.wordWrapColumn": 180,
     "editor.rulers": [190],
     "editor.linkedEditing": true,
-    "editor.formatOnPaste": false,
+    "editor.formatOnPaste": false
   },
   "[json]": {
     "editor.folding": true,
@@ -313,7 +314,7 @@
     "editor.wordWrap": "bounded",
     "editor.wordWrapColumn": 120,
     "editor.rulers": [120],
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[jsonc]": {
     "editor.folding": true,
@@ -321,7 +322,7 @@
     "editor.wordWrap": "bounded",
     "editor.wordWrapColumn": 120,
     "editor.rulers": [120],
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[dockerfile]": {
     "editor.wordWrap": "wordWrapColumn",
@@ -329,12 +330,12 @@
     "editor.fontFamily": "Fira Code Light",
     "editor.fontLigatures": true,
     "editor.fontWeight": "normal",
-    "editor.rulers": [120],
+    "editor.rulers": [120]
   },
   "[javascript]": {
     "editor.indentSize": 2,
     "editor.insertSpaces": true,
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
 
   /* Terminal */
@@ -345,7 +346,7 @@
     // "notebook.cellBorderColor": "#474756",
     "notebook.cellBorderColor": "#abb2bf26", // same color as ruler
     "notebook.outputContainerBackgroundColor": "#21252b",
-    "notebook.outputContainerBorderColor": "#454546",
+    "notebook.outputContainerBorderColor": "#454546"
 
     // "statusBar.background": "#8FBCBB",
     // "statusBar.noFolderBackground": "#8FBCBB",
@@ -359,7 +360,7 @@
     "workbench.action.navigateLeft",
     "workbench.action.navigateRight",
     "workbench.action.navigateUp",
-    "workbench.action.navigateDown",
+    "workbench.action.navigateDown"
   ],
   "terminal.integrated.sendKeybindingsToShell": false,
   "terminal.integrated.mouseWheelScrollSensitivity": 3,
@@ -390,7 +391,7 @@
     "**/*.xlsx": true,
     "**/node_modules": true,
     "**/bower_components": true,
-    "**/*.code-search": true,
+    "**/*.code-search": true
   },
   // turn off performance
   "search.searchOnType": false,
@@ -417,12 +418,12 @@
         "presentation": {
           "hidden": false,
           "group": "normal",
-          "order": 1,
+          "order": 1
         },
         "env": {
           "PYDEVD_WARN_EVALUATION_TIMEOUT": "100",
-          "PYDEVD_WARN_SLOW_RESOLVE_TIMEOUT": "20",
-        },
+          "PYDEVD_WARN_SLOW_RESOLVE_TIMEOUT": "20"
+        }
       },
       {
         "name": "no_arg",
@@ -438,12 +439,12 @@
         "presentation": {
           "hidden": false,
           "group": "normal",
-          "order": 2,
+          "order": 2
         },
         "env": {
           "PYDEVD_WARN_EVALUATION_TIMEOUT": "100",
-          "PYDEVD_WARN_SLOW_RESOLVE_TIMEOUT": "20",
-        },
+          "PYDEVD_WARN_SLOW_RESOLVE_TIMEOUT": "20"
+        }
       },
       {
         "name": "restart",
@@ -459,24 +460,24 @@
         "presentation": {
           "hidden": false,
           "group": "normal",
-          "order": 3,
+          "order": 3
         },
         "env": {
           "PYDEVD_WARN_EVALUATION_TIMEOUT": "100",
-          "PYDEVD_WARN_SLOW_RESOLVE_TIMEOUT": "20",
-        },
-      },
+          "PYDEVD_WARN_SLOW_RESOLVE_TIMEOUT": "20"
+        }
+      }
     ],
-    "compounds": [],
+    "compounds": []
   },
 
   "accessibility.signals.notebookCellCompleted": {
     "sound": "off",
-    "announcement": "auto",
+    "announcement": "auto"
   },
   "accessibility.signals.notebookCellFailed": {
     "sound": "off",
-    "announcement": "auto",
+    "announcement": "auto"
   },
 
   /* Zen Mode */
@@ -484,6 +485,5 @@
 
   /* update  */
   "update.showReleaseNotes": true,
-  "jupyter.askForKernelRestart": false,
-  "chat.viewSessions.orientation": "stacked",
+  "jupyter.askForKernelRestart": false
 }
